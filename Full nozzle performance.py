@@ -1,17 +1,20 @@
 import math
 
-# Constants
-R = 287       # J/kg-K (adjust for propellant if needed)
-g0 = 9.81     # m/s^2
+# Simple isentropic nozzle performance model
+# R: specific gas constant (J/kg-K), g0: standard gravity (m/s^2)
+R = 287
+g0 = 9.81
 
 def area_mach_relation(M, gamma):
+    # Return A/A* as a function of Mach number and gamma
     term1 = (2 / (gamma + 1))
     term2 = (1 + (gamma - 1)/2 * M**2)
     exponent = (gamma + 1) / (2 * (gamma - 1))
     return (1/M) * (term1 * term2) ** exponent
 
 def solve_exit_mach(area_ratio, gamma):
-    M = 2.0  # Initial guess (supersonic)
+    # Solve for exit Mach (supersonic root) using Newton-Raphson
+    M = 2.0
     for _ in range(1000):
         f = area_mach_relation(M, gamma) - area_ratio
         df = (area_mach_relation(M + 1e-6, gamma) - area_mach_relation(M - 1e-6, gamma)) / 2e-6
@@ -19,11 +22,13 @@ def solve_exit_mach(area_ratio, gamma):
     return M
 
 def mass_flow_rate(Pc, At, gamma, Tc):
+    # Compute choked mass flow rate (kg/s) at the throat for given Pc, At, Tc
     return (Pc * At / math.sqrt(Tc)) * \
            math.sqrt(gamma / R) * \
            ( (2 / (gamma + 1)) ** ((gamma + 1)/(2*(gamma - 1))) )
 
 def exit_conditions(Tc, Pc, gamma, Me):
+    # Return exit temperature (K), pressure (Pa), and velocity (m/s)
     Te = Tc / (1 + (gamma - 1)/2 * Me**2)
     Pe = Pc * (Te / Tc) ** (gamma/(gamma - 1))
     Ve = Me * math.sqrt(gamma * R * Te)
